@@ -55,16 +55,27 @@ main{max-width:760px;margin:0 auto;padding:12px 12px 120px}
 .zone{margin-bottom:14px}
 .zone-h{display:flex;align-items:center;gap:8px;padding:6px 2px;font-weight:700;font-size:15px;color:var(--navy)}
 .zone-h .z-count{margin-left:auto;font-size:12px;color:var(--muted);font-weight:600}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:8px}
 .tile{background:var(--card);border-radius:14px;padding:11px 12px;box-shadow:var(--shadow);
-  border-left:5px solid var(--line);cursor:pointer;transition:transform .05s}
-.tile:active{transform:scale(.985)}
+  border-left:5px solid var(--line)}
 .tile.s-ok{border-left-color:var(--green)}
 .tile.s-flag{border-left-color:var(--red);background:var(--redbg)}
 .tile.s-tbd{border-left-color:var(--blue)}
 .tile.s-empty{border-left-color:var(--line);opacity:.65}
-.tile .loc{font-weight:600;font-size:14px}
-.tile .who{font-size:12.5px;color:var(--muted);margin-top:3px}
+.tile .loc{font-weight:700;font-size:14px}
+.stafflist{display:flex;flex-direction:column;gap:6px;margin:9px 0 3px}
+.sname{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;
+  border:1.5px solid var(--line);background:#fff;color:var(--ink);font:inherit;font-weight:600;
+  font-size:15px;padding:11px 12px;border-radius:11px;cursor:pointer;text-align:left;line-height:1.2;
+  transition:transform .04s}
+.sname:active{transform:scale(.98)}
+.sname .nm{flex:1}
+.sname .st{font-size:11px;font-weight:800;letter-spacing:.3px;color:var(--muted);white-space:nowrap;
+  text-transform:uppercase}
+.sname.present{background:var(--greenbg);border-color:var(--green);color:#065f46}
+.sname.present .st{color:var(--green)}
+.sname.absent{background:var(--redbg);border-color:var(--red);color:#7f1d1d}
+.sname.absent .st{color:var(--red)}
 .tile .tag{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;margin-top:7px}
 .tag.ok{background:var(--greenbg);color:var(--green)}
 .tag.flag{background:#fff;color:var(--red);border:1px solid var(--red)}
@@ -110,11 +121,13 @@ main{max-width:760px;margin:0 auto;padding:12px 12px 120px}
 @media (prefers-color-scheme: dark){
   :root{--bg:#0b1220;--card:#0f1b30;--ink:#e7eefb;--line:#22324d;--muted:#93a4be}
   .tile.s-flag{background:#3b1213}
-  .sheet,.sheet-h,.reportbar{background:#0f1b30}
+  .reportbar{background:#0f1b30}
   .reportbar{background:linear-gradient(0deg,#0f1b30 72%,rgba(15,27,48,0))}
-  .tbtn{background:#0f1b30}
   .tag.flag{background:#0f1b30}
   .tag.empty{background:#16233b}
+  .sname{background:#0f1b30}
+  .sname.present{background:#0c2a1d;color:#a7f3d0}
+  .sname.absent{background:#3b1213;color:#fecaca}
 }
 </style>
 </head>
@@ -145,7 +158,7 @@ main{max-width:760px;margin:0 auto;padding:12px 12px 120px}
     <div class="scard tbd"><b id="sum-tbd">0</b><span>to check</span></div>
   </div>
   <div class="toolrow">
-    <span class="hint">Tap a location, then mark each staff member.</span>
+    <span class="hint">Tap a name: once = on duty, twice = off duty, again to clear.</span>
     <button class="btn-ghost" id="reset-btn">Reset checks</button>
   </div>
   <div id="zones"></div>
@@ -156,16 +169,6 @@ main{max-width:760px;margin:0 auto;padding:12px 12px 120px}
   <button class="reportbtn" id="reportbtn">
     <span id="reportbtn-main">Email Jillian — 0 not on duty</span>
   </button>
-</div>
-
-<div class="sheet-bg" id="sheet-bg"></div>
-<div class="sheet" id="sheet">
-  <div class="sheet-h">
-    <div class="grab"></div>
-    <div class="loc" id="sheet-loc">Location</div>
-    <div class="meta" id="sheet-meta">—</div>
-  </div>
-  <div class="sheet-body" id="sheet-body"></div>
 </div>
 
 <script>
@@ -280,10 +283,16 @@ function render(){
       let cls="s-tbd",tag='<span class="tag tbd">To check</span>';
       if(nflag>0){cls="s-flag";tag=`<span class="tag flag">${nflag} not on duty</span>`;}
       else if(nok===staff.length){cls="s-ok";tag='<span class="tag ok">All confirmed</span>';}
-      const who = staff.length<=2?staff.join(", "):staff.length+" staff";
-      tiles.push(`<div class="tile ${cls}" data-loc="${escA(loc)}">
+      const list=staff.map(s=>{
+        const st=checks[checkKey(view,loc,s)]||"";
+        const c=st==="present"?"present":st==="absent"?"absent":"";
+        const badge=st==="present"?"On duty":st==="absent"?"Off duty":"Tap";
+        return `<button class="sname ${c}" data-loc="${escA(loc)}" data-s="${escA(s)}">`
+          +`<span class="nm">${escH(s)}</span><span class="st">${badge}</span></button>`;
+      }).join("");
+      tiles.push(`<div class="tile ${cls}">
         <div class="loc">${escH(loc)}</div>
-        <div class="who">${escH(who)}</div>${tag}</div>`);
+        <div class="stafflist">${list}</div>${tag}</div>`);
     });
     if(tiles.length===0) return;
     const sec=document.createElement("div"); sec.className="zone";
@@ -304,35 +313,16 @@ function render(){
   $("#foot").textContent = `${total} on duty in this window · source: timetable_Non_Class.xlsx`;
   tiles_bind();
 }
+// Tap a name to cycle: unchecked -> on duty -> off duty -> unchecked.
+const CYCLE={"":"present","present":"absent","absent":""};
 function tiles_bind(){
-  document.querySelectorAll(".tile").forEach(t=>t.onclick=()=>openSheet(t.dataset.loc));
-}
-
-/* ---------- detail sheet ---------- */
-let sheetLoc=null;
-function openSheet(loc){
-  sheetLoc=loc;
-  const staff=staffAt(view,loc);
-  $("#sheet-loc").textContent=loc;
-  $("#sheet-meta").textContent=slotHuman(view);
-  const body=$("#sheet-body");
-  if(staff.length===0){ body.innerHTML=`<div class="empty-note">No one rostered here for this session.</div>`; }
-  else body.innerHTML=staff.map(s=>{
-    const st=checks[checkKey(view,loc,s)]||"";
-    return `<div class="staffrow"><div class="nm">${escH(s)}</div>
-      <div class="toggle">
-        <button class="tbtn present ${st==='present'?'on':''}" data-st="present" data-s="${escA(s)}">Here</button>
-        <button class="tbtn absent ${st==='absent'?'on':''}" data-st="absent" data-s="${escA(s)}">Not here</button>
-      </div></div>`;
-  }).join("");
-  body.querySelectorAll(".tbtn").forEach(b=>b.onclick=()=>{
-    const s=b.dataset.s, st=b.dataset.st, k=checkKey(view,loc,s);
-    if(checks[k]===st) delete checks[k]; else checks[k]=st;
-    saveChecks(); openSheet(loc); render();
+  document.querySelectorAll(".sname").forEach(b=>b.onclick=()=>{
+    const k=checkKey(view,b.dataset.loc,b.dataset.s);
+    const nx=CYCLE[checks[k]||""];
+    if(nx) checks[k]=nx; else delete checks[k];
+    saveChecks(); render();
   });
-  $("#sheet-bg").classList.add("open"); $("#sheet").classList.add("open");
 }
-function closeSheet(){$("#sheet-bg").classList.remove("open");$("#sheet").classList.remove("open");}
 
 /* ---------- flagged + email ---------- */
 function allFlagged(){
@@ -411,7 +401,6 @@ function init(){
   tick(); setInterval(tick,15000);
   render();
   document.querySelectorAll(".switch button").forEach(b=>b.onclick=()=>{rel=b.dataset.rel;render();});
-  $("#sheet-bg").onclick=closeSheet;
   $("#reportbtn").onclick=sendReport;
   $("#reset-btn").onclick=()=>{
     if(!confirm("Clear all present / not-here marks for every session?"))return;
