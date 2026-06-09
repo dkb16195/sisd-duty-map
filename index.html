@@ -55,28 +55,27 @@ main{max-width:760px;margin:0 auto;padding:12px 12px 120px}
 .zone{margin-bottom:14px}
 .zone-h{display:flex;align-items:center;gap:8px;padding:6px 2px;font-weight:700;font-size:15px;color:var(--navy)}
 .zone-h .z-count{margin-left:auto;font-size:12px;color:var(--muted);font-weight:600}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:8px}
-.tile{background:var(--card);border-radius:14px;padding:11px 12px;box-shadow:var(--shadow);
-  border-left:5px solid var(--line)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(165px,1fr));gap:8px;align-items:start}
+.tile{background:var(--card);border-radius:12px;padding:9px 10px;box-shadow:var(--shadow);
+  border-left:4px solid var(--line)}
 .tile.s-ok{border-left-color:var(--green)}
 .tile.s-flag{border-left-color:var(--red);background:var(--redbg)}
 .tile.s-tbd{border-left-color:var(--blue)}
 .tile.s-empty{border-left-color:var(--line);opacity:.65}
-.tile .loc{font-weight:700;font-size:14px}
-.stafflist{display:flex;flex-direction:column;gap:6px;margin:9px 0 3px}
-.sname{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;
+.tile .loc{font-weight:700;font-size:12.5px;line-height:1.15;color:var(--navy)}
+.stafflist{display:flex;flex-direction:column;gap:5px;margin:7px 0 2px}
+.sname{display:flex;align-items:center;gap:6px;width:100%;
   border:1.5px solid var(--line);background:#fff;color:var(--ink);font:inherit;font-weight:600;
-  font-size:15px;padding:11px 12px;border-radius:11px;cursor:pointer;text-align:left;line-height:1.2;
+  font-size:13.5px;padding:6px 8px;border-radius:8px;cursor:pointer;text-align:left;line-height:1.2;
   transition:transform .04s}
-.sname:active{transform:scale(.98)}
-.sname .nm{flex:1}
-.sname .st{font-size:11px;font-weight:800;letter-spacing:.3px;color:var(--muted);white-space:nowrap;
-  text-transform:uppercase}
+.sname:active{transform:scale(.97)}
+.sname .nm{flex:1;min-width:0;overflow-wrap:anywhere}
+.sname .st{flex:none;width:14px;text-align:center;font-size:13px;font-weight:900;color:transparent}
 .sname.present{background:var(--greenbg);border-color:var(--green);color:#065f46}
 .sname.present .st{color:var(--green)}
-.sname.absent{background:var(--redbg);border-color:var(--red);color:#7f1d1d}
+.sname.absent{background:var(--redbg);border-color:var(--red);color:#b91c1c}
 .sname.absent .st{color:var(--red)}
-.tile .tag{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;margin-top:7px}
+.tile .tag{display:inline-block;font-size:10px;font-weight:700;padding:2px 7px;border-radius:999px;margin-top:5px}
 .tag.ok{background:var(--greenbg);color:var(--green)}
 .tag.flag{background:#fff;color:var(--red);border:1px solid var(--red)}
 .tag.tbd{background:var(--bluebg);color:var(--blue)}
@@ -286,7 +285,7 @@ function render(){
       const list=staff.map(s=>{
         const st=checks[checkKey(view,loc,s)]||"";
         const c=st==="present"?"present":st==="absent"?"absent":"";
-        const badge=st==="present"?"On duty":st==="absent"?"Off duty":"Tap";
+        const badge=st==="present"?"✓":st==="absent"?"✗":"";
         return `<button class="sname ${c}" data-loc="${escA(loc)}" data-s="${escA(s)}">`
           +`<span class="nm">${escH(s)}</span><span class="st">${badge}</span></button>`;
       }).join("");
