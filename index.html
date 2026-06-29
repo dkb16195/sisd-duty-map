@@ -220,8 +220,13 @@ const checks = loadChecks(); // key -> "present"|"absent"
 function slotKey(s){return s.week+"|"+DAYS[s.dayI]+"|"+SESS[s.sidx].key;}
 function checkKey(s,loc,staff){return slotKey(s)+"|"+loc+"|"+staff;}
 
-function loadChecks(){try{return JSON.parse(localStorage.getItem("dutymap.checks")||"{}");}catch(e){return{};}}
-function saveChecks(){localStorage.setItem("dutymap.checks",JSON.stringify(checks));}
+function loadChecks(){
+  // Every visit starts clean — never pre-fill flags from a previous check.
+  // Also clear anything saved by earlier versions still sitting on this device.
+  try{localStorage.removeItem("dutymap.checks");}catch(e){}
+  return {};
+}
+function saveChecks(){/* intentionally not persisted — each visit is a fresh slate */}
 
 /* ---------- data lookup ---------- */
 function dutiesFor(slot){
